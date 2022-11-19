@@ -1,1 +1,1 @@
-worker: python watch_script.py
+worker: python main.py
