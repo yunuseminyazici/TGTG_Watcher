@@ -11,7 +11,7 @@ However, the tgtg-app does often not notify me in time when my favorite goods ar
 This application scrapes info from the tgtg-app and sends me a notification via a Telegram bot as soon as my favorite items are available. The application runs in the cloud via heroku.
 Here is a screenshot of the application:
 
-![Telegram Screenshot](/result_screenshot.jpeg "Telegram bot with notifications")
+![Telegram Screenshot](/result_screenshot.png "Telegram bot with notifications")
 
 
 ##### Tgtg API

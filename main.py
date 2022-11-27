@@ -4,11 +4,9 @@ import requests
 import schedule
 import time
 import os
-import traceback
 import maya
 import datetime
 from urllib.parse import quote
-
 
 credentials_remote_loaded = False
 
@@ -42,33 +40,24 @@ if not credentials_remote_loaded:
 
     except FileNotFoundError:
         print("No files found for local credentials.")
-        exit(1)
-
-    except:
-        print("Unexpected error")
-        print(traceback.format_exc())
-        exit(1)
 
 try:
     # Create the tgtg client with my credentials
     client = TgtgClient(access_token=config['tgtg']['access_token'],
                         refresh_token=config['tgtg']['refresh_token'],
                         user_id=config['tgtg']['user_id'])
-
 except KeyError:
     print(f"Failed to obtain TGTG credentials")
-    exit(1)
 
 try:
     bot_token = config['telegram']["bot_token"]
 except KeyError:
     print(f"Failed to obtain Telegram bot token")
-    exit(1)
+
 try:
     bot_chatID = config['telegram']["bot_chatID"]
 except KeyError:
     print(f"Failed to obtain Telegram bot chatID")
-    exit(1)
 
 # Init the favourites in stock list as a global variable
 favourites_in_stock = list()
@@ -148,8 +137,8 @@ def automatic_check():
     global favourites_in_stock
 
     # Get all favorite items
-    api_response = client.get_items()
-    new_api_result = extract_api_result(api_response)
+    api_result = client.get_items()
+    new_api_result = extract_api_result(api_result)
 
     list_of_item_ids = [fav['item_id'] for fav in new_api_result]
     for item_id in list_of_item_ids:
@@ -160,7 +149,6 @@ def automatic_check():
             old_stock = 0
             print(f"An exception occurred: The item_id was not known as a favorite before.")
         new_stock = [item['items_available'] for item in new_api_result if item['item_id'] == item_id][0]
-
 
         # Check, if the stock has changed. Send a message if so.
         if new_stock != old_stock:
@@ -177,20 +165,21 @@ def automatic_check():
                 address_line = [item['address_line'] for item in new_api_result if item['item_id'] == item_id][0]
                 latitude = [item['latitude'] for item in new_api_result if item['item_id'] == item_id][0]
                 longitude = [item['longitude'] for item in new_api_result if item['item_id'] == item_id][0]
-                image = [item['category_picture'] for item in new_api_result if item['item_id'] == item_id][0]
+
                 message = f"🥡 There are ***{new_stock}*** new goodie bags at [{display_name}](https://share.toogoodtogo.com/item/{item_id2})\n\n" \
                           f"📋 ___{description}___\n\n" \
                           f"💰 ***{price_including_tax}***\n" \
                           f"⭐ ***{rating}/5***\n" \
                           f"⏰ ***{picup_start} - {pickup_end}***\n" \
                           f"📍 [{address_line}](https://www.google.com/maps/search/?api=1&query={latitude}%2C{longitude})"
+
+                image = [item['category_picture'] for item in new_api_result if item['item_id'] == item_id][0]
                 telegram_bot_send_image(image, message)
 
             elif old_stock > new_stock == 0:
                 display_name2 = [item['display_name'] for item in new_api_result if item['item_id'] == item_id][0]
                 message = f" ❌ ***Sold out! There are no more goodie bags available at {display_name2}.***"
                 telegram_bot_send_text(message)
-
             else:
                 # Prepare a generic string, but with the important info
                 display_name3 = [item['display_name'] for item in new_api_result if item['item_id'] == item_id][0]
@@ -217,7 +206,7 @@ def still_alive():
 
 
 # Use schedule to set up a recurrent checking
-schedule.every(1).minutes.do(automatic_check)
+schedule.every(3).minutes.do(automatic_check)
 schedule.every(24).hours.do(still_alive)
 
 # Description of the service, that gets send once
@@ -229,4 +218,3 @@ telegram_bot_send_text(
 while True:
     schedule.run_pending()
     time.sleep(1)
-
