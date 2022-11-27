@@ -12,18 +12,14 @@ credentials_remote_loaded = False
 
 try:
     # Credential handling heroku
-    credentials = dict()
-    credentials['email'] = os.environ['TGTG_EMAIL']
-    print(f"tgtg_email: {credentials['email']}")
-    credentials['password'] = os.environ['TGTG_PW']
-    print(f"tgtg_pw: {credentials['password']}")
+    tgtg = dict()
+    tgtg['access_token'] = os.environ['access_token']
+    tgtg['refresh_token'] = os.environ['refresh_token']
+    tgtg['user_id'] = os.environ['user_id']
 
     telegram = dict()
-    telegram['bot_chatID1'] = os.environ['TELEGRAM_BOT_CHATID1']
-    print(f"TELEGRAM_BOT_CHATID1: {telegram['bot_chatID1']}")
-
-    telegram['bot_token'] = os.environ['TELEGRAM_BOT_TOKEN']
-    print(f"TELEGRAM_BOT_TOKEN: {telegram['bot_token']}")
+    telegram['bot_token'] = os.environ['bot_token']
+    telegram['bot_chatID'] = os.environ['bot_chatID']
 
     credentials_remote_loaded = True
 
@@ -33,9 +29,14 @@ except:
 if not credentials_remote_loaded:
     try:
         # Load credentials from a file
-        f = open('config.json', 'r')
-        config = load(f)
+        f = open('tgtg.json', 'r')
+        tgtg = load(f)
         f.close()
+
+        f = open('telegram.json', 'r')
+        telegram = load(f)
+        f.close()
+
         print("Credentials loaded from a file")
 
     except FileNotFoundError:
@@ -43,19 +44,19 @@ if not credentials_remote_loaded:
 
 try:
     # Create the tgtg client with my credentials
-    client = TgtgClient(access_token=config['tgtg']['access_token'],
-                        refresh_token=config['tgtg']['refresh_token'],
-                        user_id=config['tgtg']['user_id'])
+    client = TgtgClient(access_token=tgtg['access_token'],
+                        refresh_token=tgtg['refresh_token'],
+                        user_id=tgtg['user_id'])
 except KeyError:
     print(f"Failed to obtain TGTG credentials")
 
 try:
-    bot_token = config['telegram']["bot_token"]
+    bot_token = telegram["bot_token"]
 except KeyError:
     print(f"Failed to obtain Telegram bot token")
 
 try:
-    bot_chatID = config['telegram']["bot_chatID"]
+    bot_chatID = telegram["bot_chatID"]
 except KeyError:
     print(f"Failed to obtain Telegram bot chatID")
 
